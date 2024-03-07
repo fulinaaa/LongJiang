@@ -1,7 +1,10 @@
-package com.longjiang.longjiang;
+package com.longjiang;
 
+import org.apache.ibatis.annotations.Mapper;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.stereotype.Component;
 
 @SpringBootApplication
 public class LongjiangApplication {
@@ -11,3 +14,5 @@ public class LongjiangApplication {
 	}
 
 }
+
+
