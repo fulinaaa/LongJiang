@@ -3,6 +3,7 @@ package com.longjiang.mapper;
 import com.longjiang.Entity.DiscussPost;
 import org.apache.ibatis.annotations.Mapper;
 
+
 import java.util.List;
 @Mapper
 public interface DiscussPostMapper {
