@@ -17,7 +17,7 @@ public class DiscussPostServiceImpl implements DiscussPostService {
     }
 
     @Override
-    public int findDiscussPosts(int userId) {
+    public int selectDiscussPostsCount(int userId) {
         return discussPostMapper.selectDiscussPostCount(userId);
     }
 }
