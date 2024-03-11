@@ -7,11 +7,28 @@ spring:
     password: 1234
     type: com.alibaba.druid.pool.DruidDataSource
     url: jdbc:mysql://localhost:3306/longjiang?serverTimezone=Asia/Shanghai&useUnicode=true&characterEncoding=utf-8&zeroDateTimeBehavior=convertToNull&useSSL=false&allowPublicKeyRetrieval=true
+  mail:
+    host: smtp.qq.com
+    port: 465
+    username:
+    password:
+    protocol: smtps
+    properties:
+      mail:
+        smtp:
+          ssl:
+            enable: true
+
 server:
   port: 8080
+  servlet:
+    context-path: "/LongJiang"
 mybatis:
   mapper-locations: classpath:=mapper/*.xml
   type-aliases-package: com.longjiang.Entity
   configuration:
         use-generated-keys: true
         map-underscore-to-camel-case: true
+longjiang :
+  path :
+    domain : http://localhost:8080

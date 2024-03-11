@@ -1,3 +1,4 @@
+var CONTEXT_PATH="/LongJiang";
 window.alert = function(message) {
 	if(!$(".alert-box").length) {
 		$("body").append(

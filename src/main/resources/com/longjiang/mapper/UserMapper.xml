@@ -26,7 +26,7 @@
     </select>
     <insert id="insertUser">
         insert into user(<include refid="insertFields"></include>) values (#{username},#{password}
-        ,#{salt},#{email},#{type},#{status},#{activationCode},#{header_url},#{creatTime})
+        ,#{salt},#{email},#{type},#{status},#{activationCode},#{headerUrl},#{createTime})
     </insert>
     <update id="updateStatus">
         update user set status=#{status} where id=#{id}
