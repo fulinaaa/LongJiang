@@ -1,6 +1,8 @@
 package com.longjiang.service.impl;
 
+import com.longjiang.Entity.LoginTicket;
 import com.longjiang.Entity.User;
+import com.longjiang.mapper.LoginTicketMapper;
 import com.longjiang.mapper.UserMapper;
 import com.longjiang.service.UserService;
 import com.longjiang.util.LongJiangConstant;
@@ -24,6 +26,8 @@ public class UserServiceImpl implements UserService , LongJiangConstant {
     private UserMapper userMapper;
     @Autowired
     private MailClient mailClient;
+    @Autowired
+    private LoginTicketMapper loginTicketMapper;
     @Autowired
     private TemplateEngine templateEngine;
     @Value("${server.servlet.context-path}")
@@ -99,5 +103,45 @@ public class UserServiceImpl implements UserService , LongJiangConstant {
         }else{
             return ACTIVATION_FAILURE;
         }
+    }
+    @Override
+    public Map<String,Object> login(String username,String password,int expiredSeconds){
+        HashMap<String, Object> map = new HashMap<>();
+        if(StringUtils.isBlank(username)){
+            map.put("usernameMsg","账号不能为空");
+            return map;
+        }
+        if(StringUtils.isBlank(password)){
+            map.put("passwordMsg","密码不能为空");
+            return map;
+        }
+        User user = userMapper.selectByName(username);
+        if(user==null){
+            map.put("usernameMsg","账户不存在");
+            return map;
+        }
+        if(user.getStatus()==0){
+            map.put("usernameMsg","该账号未激活");
+            return map;
+        }
+        //对密码进行md5加密
+        //password=LongJiangUtil.md5(password+user.getSalt());
+        if(!user.getPassword().equals(password)){
+            map.put("passwordMsg","密码不正确");
+            return map;
+        }
+        LoginTicket loginTicket=new LoginTicket();
+        loginTicket.setUserId(user.getId());
+        loginTicket.setTicket(LongJiangUtil.getRandomUUID());
+        loginTicket.setStatus(0);
+        loginTicket.setExpired(new Date(System.currentTimeMillis()+3600*60));
+        loginTicketMapper.insertLoginTicket(loginTicket);
+        map.put("ticket",loginTicket.getTicket());
+        return map;
+    }
+
+    @Override
+    public void logout(String ticket) {
+        loginTicketMapper.updateStatus(ticket,1);
     }
 }
