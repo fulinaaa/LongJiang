@@ -11,4 +11,7 @@ public interface DiscussPostMapper {
     List<DiscussPost>selectAll(int userId, int offset, int limit);
     //默认查询所有帖子整数，利用userId可以查看个人帖子
     int selectDiscussPostCount(int userId);
+    int insertDiscussPost(DiscussPost discussPost);
+    DiscussPost selectDiscussPostById(int id);
+    int updateCommentCount(int id,int commentCount);
 }

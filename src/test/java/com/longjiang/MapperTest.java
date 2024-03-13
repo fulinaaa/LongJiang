@@ -8,6 +8,7 @@ import com.longjiang.mapper.LoginTicketMapper;
 import com.longjiang.mapper.UserMapper;
 import com.longjiang.util.JWTUtil;
 import com.longjiang.util.MailClient;
+import com.longjiang.util.SensitiveFilter;
 import io.jsonwebtoken.Claims;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,6 +23,8 @@ import java.util.List;
 public class MapperTest {
     @Autowired
     LoginTicketMapper loginTicketMapper;
+    @Autowired
+    private SensitiveFilter sensitiveFilter;
     @Test
     public void mytest(){
         HashMap<String, Object> map = new HashMap<>();
@@ -39,5 +42,9 @@ public class MapperTest {
         loginTicketMapper.insertLoginTicket(loginTicket);
         LoginTicket lol = loginTicketMapper.selectByTicket("lol");
         loginTicketMapper.updateStatus("lol",1);
+    }
+    @Test
+    public void testSensitiveFilter(){
+
     }
 }
