@@ -32,3 +32,4 @@ mybatis:
 longjiang :
   path :
     domain : http://localhost:8080
+    upload : E:/LongJiangTest
