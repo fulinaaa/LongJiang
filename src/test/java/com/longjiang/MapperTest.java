@@ -2,9 +2,11 @@ package com.longjiang;
 
 import com.longjiang.Entity.DiscussPost;
 import com.longjiang.Entity.LoginTicket;
+import com.longjiang.Entity.Message;
 import com.longjiang.Entity.User;
 import com.longjiang.mapper.DiscussPostMapper;
 import com.longjiang.mapper.LoginTicketMapper;
+import com.longjiang.mapper.MessageMapper;
 import com.longjiang.mapper.UserMapper;
 import com.longjiang.util.JWTUtil;
 import com.longjiang.util.MailClient;
@@ -25,6 +27,8 @@ public class MapperTest {
     LoginTicketMapper loginTicketMapper;
     @Autowired
     private SensitiveFilter sensitiveFilter;
+    @Autowired
+    MessageMapper messageMapper;
     @Test
     public void mytest(){
         HashMap<String, Object> map = new HashMap<>();
@@ -44,7 +48,20 @@ public class MapperTest {
         loginTicketMapper.updateStatus("lol",1);
     }
     @Test
-    public void testSensitiveFilter(){
-
+    public void testMessageMapper(){
+        List<Message> messages = messageMapper.selectConversations(111, 0, 20);
+        for (Message message : messages) {
+            System.out.println(message);
+        }
+        int count = messageMapper.selectConversationCount(111);
+        System.out.println(count);
+        List<Message> list = messageMapper.selectLetters("111_112", 0, 10);
+        for (Message message : list) {
+            System.out.println(message);
+        }
+        int i = messageMapper.selectLetterCount("111_112");
+        System.out.println(i);
+        int unreadCount = messageMapper.selectLetterUnreadCount(131, "111_131");
+        System.out.println(unreadCount);
     }
 }

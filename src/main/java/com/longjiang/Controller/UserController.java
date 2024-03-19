@@ -2,6 +2,7 @@ package com.longjiang.Controller;
 
 import com.longjiang.Entity.User;
 import com.longjiang.annotation.LoginRequired;
+import com.longjiang.service.LikeService;
 import com.longjiang.service.UserService;
 import com.longjiang.util.BaseContext;
 import com.longjiang.util.LongJiangUtil;
@@ -39,6 +40,8 @@ public class UserController {
     private UserService userService;
     @Autowired
     private BaseContext baseContext;
+    @Autowired
+    private LikeService likeService;
     @GetMapping("/setting")
     @LoginRequired
     public String getSettingPage(){
@@ -90,5 +93,18 @@ public class UserController {
         catch (IOException e) {
             throw new RuntimeException(e);
         }
+    }
+    //个人主页
+    @GetMapping("/profile/{userId}")
+    public String getProfilePage(@PathVariable("userId")int userId,Model model){
+        User user = userService.selectUserById(userId);
+        if(user==null){
+            throw new RuntimeException("用户不存在");
+        }
+        model.addAttribute("user",user);
+        //用户点赞数
+        int likeCount = likeService.findUserLikeCount(userId);
+        model.addAttribute("likeCount",likeCount);
+        return "/site/profile";
     }
 }

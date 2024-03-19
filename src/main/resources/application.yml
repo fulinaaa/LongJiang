@@ -18,6 +18,10 @@ spring:
         smtp:
           ssl:
             enable: true
+  redis:
+    database: 0
+    port: 6379
+    host: localhost
 
 server:
   port: 8080

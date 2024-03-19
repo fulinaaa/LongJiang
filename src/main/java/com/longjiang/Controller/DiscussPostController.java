@@ -6,6 +6,7 @@ import com.longjiang.Entity.Page;
 import com.longjiang.Entity.User;
 import com.longjiang.service.CommentService;
 import com.longjiang.service.DiscussPostService;
+import com.longjiang.service.LikeService;
 import com.longjiang.service.UserService;
 import com.longjiang.util.BaseContext;
 import com.longjiang.util.LongJiangConstant;
@@ -28,6 +29,8 @@ public class DiscussPostController implements LongJiangConstant{
     private UserService userService;
     @Autowired
     private CommentService commentService;
+    @Autowired
+    private LikeService likeService;
     @PostMapping("/add")
     @ResponseBody
     public String addDiscussPost(String title,String content){
@@ -46,6 +49,11 @@ public class DiscussPostController implements LongJiangConstant{
     @GetMapping("/detail/{discussPostId}")
     public String getDiscussPost(@PathVariable("discussPostId")int discussPostId, Model model,Page page){
         DiscussPost post = discussPostService.findDiscussPostById(discussPostId);
+        //点赞数量
+        long likeCount = likeService.findEntityLikeCount(ENTITY_TYPE_POST, discussPostId);
+        model.addAttribute("likeCount",likeCount);
+        int likeStatus=baseContext.getUser()==null?0:likeService.findEntityLikeStatus(baseContext.getUser().getId(),ENTITY_TYPE_POST,discussPostId);
+        model.addAttribute("likeStatus",likeStatus);
         model.addAttribute("post",post);
         User user = userService.selectUserById(post.getUserId());
         model.addAttribute("user",user);
@@ -65,6 +73,11 @@ public class DiscussPostController implements LongJiangConstant{
                 commentVo.put("comment",comment);
                 //作者
                 commentVo.put("user",userService.selectUserById(comment.getUserId()));
+                //点赞数量与点赞状态
+                likeCount = likeService.findEntityLikeCount(ENTITY_TYPE_COMMENT, comment.getId());
+                commentVo.put("likeCount",likeCount);
+                likeStatus=baseContext.getUser()==null?0:likeService.findEntityLikeStatus(baseContext.getUser().getId(),ENTITY_TYPE_COMMENT,comment.getId());
+                commentVo.put("likeStatus",likeStatus);
                 //回复列表
                 List<Comment> replyList = commentService.findCommentsByEntity(ENTITY_TYPE_COMMENT, comment.getId(), 0, Integer.MAX_VALUE);
                 //回复VO列表
@@ -78,7 +91,13 @@ public class DiscussPostController implements LongJiangConstant{
                         replyVo.put("user",userService.selectUserById(reply.getUserId()));
                         //回复目标
                         User target=reply.getTargetId()==0?null:userService.selectUserById(reply.getTargetId());
+                        //点赞数量与点赞状态
+                        likeCount = likeService.findEntityLikeCount(ENTITY_TYPE_COMMENT, reply.getId());
+                        replyVo.put("likeCount",likeCount);
+                        likeStatus=baseContext.getUser()==null?0:likeService.findEntityLikeStatus(baseContext.getUser().getId(),ENTITY_TYPE_COMMENT,reply.getId());
+                        replyVo.put("likeStatus",likeStatus);
                         replyVo.put("target",target);
+                        replyVo.put("likeCount",likeService.findEntityLikeCount(ENTITY_TYPE_COMMENT,reply.getId()));
                         replyVoList.add(replyVo);
                     }
                 }
