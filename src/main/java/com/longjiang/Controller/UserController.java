@@ -2,9 +2,11 @@ package com.longjiang.Controller;
 
 import com.longjiang.Entity.User;
 import com.longjiang.annotation.LoginRequired;
+import com.longjiang.service.FollowService;
 import com.longjiang.service.LikeService;
 import com.longjiang.service.UserService;
 import com.longjiang.util.BaseContext;
+import com.longjiang.util.LongJiangConstant;
 import com.longjiang.util.LongJiangUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -29,7 +31,7 @@ import java.io.OutputStream;
 @Controller
 @Slf4j
 @RequestMapping("/user")
-public class UserController {
+public class UserController  implements LongJiangConstant {
     @Value("${longjiang.path.upload}")
     private String uploadPath;
     @Value("${longjiang.path.domain}")
@@ -42,6 +44,8 @@ public class UserController {
     private BaseContext baseContext;
     @Autowired
     private LikeService likeService;
+    @Autowired
+    private FollowService followService;
     @GetMapping("/setting")
     @LoginRequired
     public String getSettingPage(){
@@ -105,6 +109,17 @@ public class UserController {
         //用户点赞数
         int likeCount = likeService.findUserLikeCount(userId);
         model.addAttribute("likeCount",likeCount);
+        //关注数量
+        long followeeCount = followService.findFolloweeCount(userId, ENTITY_TYPE_USER);
+        model.addAttribute("followeeCount",followeeCount);
+        //被关注数量
+        long followerCount = followService.findFollowerCount(ENTITY_TYPE_USER, userId);
+        model.addAttribute("followerCount",followerCount);
+        boolean hasFollowed=false;
+        if(baseContext.getUser()!=null){
+            hasFollowed=followService.hasFollowed(baseContext.getUser().getId(),ENTITY_TYPE_USER,userId);
+        }
+        model.addAttribute("hasFollowed",hasFollowed);
         return "/site/profile";
     }
 }

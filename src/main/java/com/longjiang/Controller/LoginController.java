@@ -5,6 +5,9 @@ import com.longjiang.Entity.User;
 import com.longjiang.service.UserService;
 import com.longjiang.util.JWTUtil;
 import com.longjiang.util.LongJiangConstant;
+import com.longjiang.util.LongJiangUtil;
+import com.longjiang.util.RedisKeyUtil;
+import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import lombok.extern.slf4j.Slf4j;
@@ -12,6 +15,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.security.oauth2.resource.OAuth2ResourceServerProperties;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -27,6 +31,7 @@ import java.io.IOException;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 @Controller
 @Slf4j
@@ -37,6 +42,8 @@ public class LoginController implements LongJiangConstant {
     private  Producer kaptchaProducer;
     @Value("${server.servlet.context-path}")
     private String contextPath;
+    @Autowired
+    RedisTemplate redisTemplate;
     @GetMapping("/register")
     public String getRegisterPage(){
         return "/site/register";
@@ -61,13 +68,22 @@ public class LoginController implements LongJiangConstant {
     }
     //生成验证码
     @GetMapping("/kaptcha")
-    public void getKaptcha(HttpServletResponse res, HttpSession session){
+    public void getKaptcha(HttpServletResponse res/*, HttpSession session*/) {
         String text=kaptchaProducer.createText();
         BufferedImage image = kaptchaProducer.createImage(text);
-        /*HashMap<String, Object> map = new HashMap<>();
-        map.put("kaptcha",text);
-        JWTUtil.createJWT("LongJiang",map);*/
-        session.setAttribute("kaptcha",text);
+
+        //session.setAttribute("kaptcha",text);
+
+        //验证码的归属
+        String kaptchaOwner= LongJiangUtil.getRandomUUID();
+        Cookie cookie=new Cookie("kaptchaOnwer",kaptchaOwner);
+        cookie.setMaxAge(60);
+        cookie.setPath(contextPath);
+        res.addCookie(cookie);
+
+        //将验证码存入redis中
+        String redisKey= RedisKeyUtil.getKaptchaKey(kaptchaOwner);
+        redisTemplate.opsForValue().set(redisKey,text,60, TimeUnit.SECONDS);
         res.setContentType("image/png");
         try {
             ServletOutputStream os = res.getOutputStream();
@@ -93,9 +109,15 @@ public class LoginController implements LongJiangConstant {
     }
     @PostMapping("/login")
     public String login(String username,String password,String code,
-                        boolean rememberme,Model model,HttpSession session,
-                        HttpServletResponse res){
-        String kaptcha=(String) session.getAttribute("kaptcha");
+                        boolean rememberme,Model model,/*HttpSession session,*/
+                        HttpServletResponse res,@CookieValue("kaptchaOnwer")String kaptchaOnwer){
+        /*String kaptcha=(String) session.getAttribute("kaptcha");*/
+        String kaptcha=null;
+
+        if(StringUtils.isNotBlank(kaptchaOnwer)){
+            String redisKey=RedisKeyUtil.getKaptchaKey(kaptchaOnwer);
+            kaptcha=(String) redisTemplate.opsForValue().get(redisKey);
+        }
         if(StringUtils.isBlank(kaptcha)||StringUtils.isBlank(code)||!kaptcha.equalsIgnoreCase(code)){
             model.addAttribute("codeMsg","验证码不正确");
             return "/site/login";
