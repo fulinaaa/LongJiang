@@ -3,18 +3,13 @@ package com.longjiang.Controller;
 import com.google.code.kaptcha.Producer;
 import com.longjiang.Entity.User;
 import com.longjiang.service.UserService;
-import com.longjiang.util.JWTUtil;
 import com.longjiang.util.LongJiangConstant;
 import com.longjiang.util.LongJiangUtil;
 import com.longjiang.util.RedisKeyUtil;
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.autoconfigure.security.oauth2.resource.OAuth2ResourceServerProperties;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -25,11 +20,8 @@ import javax.servlet.ServletOutputStream;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
-import java.util.Date;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
@@ -43,7 +35,7 @@ public class LoginController implements LongJiangConstant {
     @Value("${server.servlet.context-path}")
     private String contextPath;
     @Autowired
-    RedisTemplate redisTemplate;
+    private RedisTemplate redisTemplate;
     @GetMapping("/register")
     public String getRegisterPage(){
         return "/site/register";

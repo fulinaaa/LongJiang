@@ -13,4 +13,8 @@ public interface MessageService {
     public int findLetterUnreadCount(int userId,String conversationId);
     public int addMessage(Message message);
     public int readMessage(List<Integer>list);
+    public Message findLatestNotice(int userId,String topic);
+    public int findNoticeCount(int userId,String topic);
+    public int findNoticeUnreadCount(int userId,String topic);
+    public List<Message> findNotices(int userId,String topic,int offset,int limit);
 }
