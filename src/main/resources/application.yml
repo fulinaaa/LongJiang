@@ -43,6 +43,7 @@ spring:
           enabled: true #开启失败重试
           initial-interval: 100ms #间隔
           max-attempts: 3 #最大重试次数
+  
 
 
 server:
