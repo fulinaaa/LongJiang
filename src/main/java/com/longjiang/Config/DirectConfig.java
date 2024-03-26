@@ -27,8 +27,20 @@ public class DirectConfig {
         return new Queue("comment");
     }
     @Bean
+    public Queue DirectPublishQueue(){
+        return new Queue("publish");
+    }
+    @Bean
+    public Queue DirectDeleteQueue(){
+        return new Queue("delete");
+    }
+    @Bean
     public Binding DirectLikeBinding(@Qualifier("DirectExchange") DirectExchange directExchange, Queue DirectLikeQueue){
         return BindingBuilder.bind(DirectLikeQueue).to(directExchange).with("like");
+    }
+    @Bean
+    public Binding DirectDeleteBinding(@Qualifier("DirectExchange") DirectExchange directExchange, Queue DirectDeleteQueue){
+        return BindingBuilder.bind(DirectDeleteQueue).to(directExchange).with("delete");
     }
     @Bean
     public Binding DirectFollowBinding(@Qualifier("DirectExchange") DirectExchange directExchange,Queue DirectFollowQueue){
@@ -37,5 +49,9 @@ public class DirectConfig {
     @Bean
     public Binding DirectCommentBinding(@Qualifier("DirectExchange")DirectExchange directExchange,Queue DirectCommentQueue){
         return BindingBuilder.bind(DirectCommentQueue).to(directExchange).with("comment");
+    }
+    @Bean
+    public Binding DirectPublishBinding(@Qualifier("DirectExchange") DirectExchange directExchange, Queue DirectPublishQueue){
+        return BindingBuilder.bind(DirectPublishQueue).to(directExchange).with("publish");
     }
 }

@@ -43,6 +43,21 @@ spring:
           enabled: true #开启失败重试
           initial-interval: 100ms #间隔
           max-attempts: 3 #最大重试次数
+  quartz:
+    job-store-type: jdbc
+    scheduler-name: LongJiangScheduler
+    properties:
+      org :
+       quartz :
+        scheduler :
+         instanceId: AUTO
+        jobStore :
+          class : org.springframework.scheduling.quartz.LocalDataSourceJobStore
+          driverDelegateClass : org.quartz.impl.jdbcjobstore.StdJDBCDelegate
+          isClustered : true
+        threadPool :
+          class : org.quartz.simpl.SimpleThreadPool
+          threadCount : 5
 
 
 server:
@@ -59,3 +74,7 @@ longjiang :
   path :
     domain : http://localhost:8080
     upload : E:/LongJiangTest
+caffeine :
+  post :
+    max-size : 15
+    expire-seconds : 180

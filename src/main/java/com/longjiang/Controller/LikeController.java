@@ -8,7 +8,9 @@ import com.longjiang.service.LikeService;
 import com.longjiang.util.BaseContext;
 import com.longjiang.util.LongJiangConstant;
 import com.longjiang.util.LongJiangUtil;
+import com.longjiang.util.RedisKeyUtil;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
@@ -24,6 +26,8 @@ public class LikeController implements LongJiangConstant{
     private BaseContext baseContext;
     @Autowired
     private EventProducer eventProducer;
+    @Autowired
+    private RedisTemplate redisTemplate;
     @PostMapping("/like")
     @ResponseBody
     @LoginRequired
@@ -43,6 +47,11 @@ public class LikeController implements LongJiangConstant{
                     .setEntityType(entityType).setEntityId(entityId).setEntityUserId(entityUserId)
                     .setData("postId",postId);
             eventProducer.fireEvent(event);
+        }
+        if(entityType==ENTITY_TYPE_POST){
+            //计算帖子分数
+            String redisKey= RedisKeyUtil.getPostScoreKey();
+            redisTemplate.opsForSet().add(redisKey,postId);
         }
         return LongJiangUtil.getJSONString(0,null,map);
     }

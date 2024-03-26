@@ -1,19 +1,24 @@
 package com.longjiang.Event;
 
 import com.alibaba.fastjson.JSONObject;
+import com.longjiang.Entity.DiscussPost;
 import com.longjiang.Entity.Event;
 import com.longjiang.Entity.Message;
+import com.longjiang.mapper.DiscussPostMapper;
+import com.longjiang.service.DiscussPostService;
+import com.longjiang.service.ElasticsearchService;
 import com.longjiang.service.MessageService;
+import com.longjiang.service.impl.DiscussPostServiceImpl;
 import com.longjiang.util.LongJiangConstant;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.elasticsearch.client.RestHighLevelClient;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.elasticsearch.client.elc.ElasticsearchTemplate;
 import org.springframework.stereotype.Component;
-import org.springframework.web.context.request.RequestContextHolder;
-import org.springframework.web.context.request.ServletRequestAttributes;
 
-import javax.servlet.http.HttpServletRequest;
+import java.io.IOException;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -23,11 +28,14 @@ import java.util.Map;
 public class EventConsumer implements LongJiangConstant {
     @Autowired
     private MessageService messageService;
+    @Autowired
+    private ElasticsearchService elasticsearchService;
+    @Autowired
+    private DiscussPostService discussPostService;
     @RabbitListener(queues = "follow")
     @RabbitListener(queues = "like")
     @RabbitListener(queues = "comment")
     public void handleCommentMessage(String msg){
-
         if(msg==null|| StringUtils.isBlank(msg)){
             log.error("消息内容为空");
             return;
@@ -55,5 +63,35 @@ public class EventConsumer implements LongJiangConstant {
         }
         message.setContent(JSONObject.toJSONString(content));
         messageService.addMessage(message);
+    }
+    @RabbitListener(queues = "publish")
+    public void handlePublishMessage(String msg) throws IOException {
+        if(msg==null|| StringUtils.isBlank(msg)){
+            log.error("消息内容为空");
+            return;
+        }
+        Event event= JSONObject.parseObject(msg,Event.class);
+        if(event==null){
+            log.error("消息格式错误");
+            return;
+        }
+        System.out.println(event);
+        DiscussPost post = discussPostService.findDiscussPostById(event.getEntityId());
+        elasticsearchService.saveDiscussPost(post);
+    }
+    @RabbitListener(queues = "delete")
+    public void handleDeleteMessage(String msg) throws IOException {
+        if(msg==null|| StringUtils.isBlank(msg)){
+            log.error("消息内容为空");
+            return;
+        }
+        Event event= JSONObject.parseObject(msg,Event.class);
+        if(event==null){
+            log.error("消息格式错误");
+            return;
+        }
+        System.out.println(event);
+
+        elasticsearchService.deleteDiscussPost(event.getEntityId());
     }
 }

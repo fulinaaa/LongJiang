@@ -13,15 +13,6 @@ public class EventProducer {
     RabbitTemplate rabbitTemplate;
 
     public void fireEvent(Event event){
-
-        rabbitTemplate.setConfirmCallback(new RabbitTemplate.ConfirmCallback() {
-            @Override
-            public void confirm(CorrelationData correlationData, boolean b, String s) {
-                if(!b){
-                    log.error(s);
-                }
-            }
-        });
-        rabbitTemplate.convertAndSend("direct123",event.getTopic(), JSONObject.toJSONString(event));
+        rabbitTemplate.convertAndSend("direct",event.getTopic(), JSONObject.toJSONString(event));
     }
 }

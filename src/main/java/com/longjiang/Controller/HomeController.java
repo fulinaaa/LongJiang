@@ -13,6 +13,7 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 
 
 import java.util.*;
@@ -25,11 +26,11 @@ public class HomeController {
     @Autowired
     private LikeService likeService;
     @GetMapping("/index")
-    public String getIndexPage(Model model, Page page){
+    public String getIndexPage(Model model, Page page,@RequestParam(name="orderMode",defaultValue = "0") int orderMode){
         page.setRows(discussPostService.selectDiscussPostsCount(0));
-        page.setPath("/index");
+        page.setPath("/index?orderMode="+orderMode);
         //同时返回帖子信息，与用户信息
-        List<DiscussPost> list = discussPostService.selectDiscussPosts(0, page.getOffset(), page.getLimit());
+        List<DiscussPost> list = discussPostService.selectDiscussPosts(0, page.getOffset(), page.getLimit(),orderMode);
         List<Map<String, Object>> discussPostVo=new ArrayList<>();
         if(list!=null){
             for (DiscussPost post : list) {
@@ -44,10 +45,15 @@ public class HomeController {
         }
         System.out.println(page.getCurrent());
         model.addAttribute("discussPostVo",discussPostVo);
+        model.addAttribute("orderMode",orderMode);
         return "index";
     }
     @GetMapping("/error")
     public String getErrorPage(){
         return "/error/500";
+    }
+    @GetMapping("/denied")
+    public String getDeniedPage(){
+        return "/error/404";
     }
 }

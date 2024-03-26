@@ -8,8 +8,10 @@ import com.longjiang.service.CommentService;
 import com.longjiang.service.DiscussPostService;
 import com.longjiang.util.BaseContext;
 import com.longjiang.util.LongJiangConstant;
+import com.longjiang.util.RedisKeyUtil;
 import org.apache.ibatis.annotations.Mapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
@@ -35,6 +37,8 @@ public class CommentController implements LongJiangConstant {
     private EventProducer eventProducer;
     @Autowired
     private DiscussPostService discussPostService;
+    @Autowired
+    private RedisTemplate redisTemplate;
     @PostMapping("/add/{discussPostId}")
     @Transactional(isolation = Isolation.READ_COMMITTED)
     public String addComment(@PathVariable("discussPostId")int discussPostId, Comment comment)  {
@@ -55,6 +59,16 @@ public class CommentController implements LongJiangConstant {
         }
 
         eventProducer.fireEvent(event);
+        if(comment.getEntityType()==ENTITY_TYPE_POST){
+            event=new Event().setTopic(TOPIC_PUBLISH)
+                    .setUserId(comment.getUserId())
+                    .setEntityType(ENTITY_TYPE_POST)
+                    .setEntityId(discussPostId);
+            eventProducer.fireEvent(event);
+            //计算帖子分数
+            String redisKey= RedisKeyUtil.getPostScoreKey();
+            redisTemplate.opsForSet().add(redisKey,discussPostId);
+        }
 
         return "redirect:/discuss/detail/"+discussPostId;
     }

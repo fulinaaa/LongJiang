@@ -1,9 +1,7 @@
 package com.longjiang.Controller;
 
-import com.longjiang.Entity.Comment;
-import com.longjiang.Entity.DiscussPost;
-import com.longjiang.Entity.Page;
-import com.longjiang.Entity.User;
+import com.longjiang.Entity.*;
+import com.longjiang.Event.EventProducer;
 import com.longjiang.service.CommentService;
 import com.longjiang.service.DiscussPostService;
 import com.longjiang.service.LikeService;
@@ -11,7 +9,9 @@ import com.longjiang.service.UserService;
 import com.longjiang.util.BaseContext;
 import com.longjiang.util.LongJiangConstant;
 import com.longjiang.util.LongJiangUtil;
+import com.longjiang.util.RedisKeyUtil;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -31,6 +31,10 @@ public class DiscussPostController implements LongJiangConstant{
     private CommentService commentService;
     @Autowired
     private LikeService likeService;
+    @Autowired
+    private EventProducer eventProducer;
+    @Autowired
+    private RedisTemplate redisTemplate;
     @PostMapping("/add")
     @ResponseBody
     public String addDiscussPost(String title,String content){
@@ -44,6 +48,15 @@ public class DiscussPostController implements LongJiangConstant{
         discussPost.setUserId(user.getId());
         discussPost.setCreateTime(new Date());
         discussPostService.addDiscussPost(discussPost);
+        //触发发帖事件
+        Event event=new Event().setTopic(TOPIC_PUBLISH)
+                .setUserId(user.getId())
+                .setEntityType(ENTITY_TYPE_POST)
+                .setEntityId(discussPost.getId());
+        eventProducer.fireEvent(event);
+        //计算发帖的分数
+        String redisKey= RedisKeyUtil.getPostScoreKey();
+        redisTemplate.opsForSet().add(redisKey,discussPost.getId());
         return LongJiangUtil.getJSONString(0,"发布成功");
     }
     @GetMapping("/detail/{discussPostId}")
@@ -111,5 +124,43 @@ public class DiscussPostController implements LongJiangConstant{
         model.addAttribute("comments",commentVoList);
         return "/site/discuss-detail";
     }
-
+    @PostMapping("/top")
+    @ResponseBody
+    public String setTop(int id){
+        discussPostService.updateType(id,1);
+        //触发发帖事件
+        Event event=new Event().setTopic(TOPIC_PUBLISH)
+                .setUserId(baseContext.getUser().getId())
+                .setEntityType(ENTITY_TYPE_POST)
+                .setEntityId(id);
+        eventProducer.fireEvent(event);
+        return LongJiangUtil.getJSONString(0);
+    }
+    @PostMapping("/wonderful")
+    @ResponseBody
+    public String setWonderful(int id){
+        discussPostService.updateStatus(id,1);
+        //触发发帖事件
+        Event event=new Event().setTopic(TOPIC_PUBLISH)
+                .setUserId(baseContext.getUser().getId())
+                .setEntityType(ENTITY_TYPE_POST)
+                .setEntityId(id);
+        eventProducer.fireEvent(event);
+        //计算帖子分数
+        String redisKey=RedisKeyUtil.getPostScoreKey();
+        redisTemplate.opsForSet().add(redisKey,id);
+        return LongJiangUtil.getJSONString(0);
+    }
+    @PostMapping("/delete")
+    @ResponseBody
+    public String setDelete(int id){
+        discussPostService.updateStatus(id,2);
+        //触发删帖事件
+        Event event=new Event().setTopic(TOPIC_DELETE)
+                .setUserId(baseContext.getUser().getId())
+                .setEntityType(ENTITY_TYPE_POST)
+                .setEntityId(id);
+        eventProducer.fireEvent(event);
+        return LongJiangUtil.getJSONString(0);
+    }
 }
